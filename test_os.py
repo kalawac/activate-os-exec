@@ -17,10 +17,6 @@ env = args.env[0] if args.env else None
 if command in  ('activate', 'deactivate'):
     print('activating! or deactivating!')
     
-    path = '/bin/sh'
-
-    arg_list=['. /bin/sh']
-    
     env_map = os.environ
 
     # PS1='(abc) '
@@ -44,8 +40,12 @@ if command in  ('activate', 'deactivate'):
     env_map['_CE_CONDA']=''
     env_map['CONDA_PYTHON_EXE']='/Users/kca/miniconda3/bin/python'
 
+    path = env_map['SHELL']
+    arg = f'. {path}'
+    
+    arg_list=[arg]
+
 
     os.execve(path, arg_list, env_map)
 else:
     print('oops! I can\'t work with that command!')
-    print(os.environ)
