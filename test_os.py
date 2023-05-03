@@ -16,10 +16,6 @@ env = args.env[0] if args.env else None
 
 if command in  ('activate', 'deactivate'):
     print('activating! or deactivating!')
-
-    # path = '/Users/kca/dev-conda/activate-os-exec/act.sh'
-
-    # arg_list=['. /Users/kca/dev-conda/activate-os-exec/act.sh'] # note: it will still run without this in the arg list
     
     path = '/bin/sh'
 
