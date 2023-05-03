@@ -96,3 +96,25 @@ export CONDA_SHLVL='1'
 export CONDA_PROMPT_MODIFIER='(plugin) '
 echo ARDHC complete!
 '''
+
+# {
+#     'unset_vars': [],
+#     'set_vars': {'PS1': '(scratch3) '},
+#     'export_vars': {'PATH': '/Users/kca/dev-conda/conda/devenv/Darwin/arm64/envs/devenv-3.8-c/envs/scratch3/bin:/Users/kca/dev-conda/conda/devenv/Darwin/arm64/envs/devenv-3.8-c/bin:/Users/kca/dev-conda/conda/devenv/Darwin/arm64/envs/devenv-3.8-c/condabin:/Users/kca/dev-conda/conda/devenv/Darwin/arm64/envs/devenv-3.8-c/condabin:/Users/kca/miniconda3/condabin:/opt/homebrew/bin:/opt/homebrew/sbin:/usr/local/bin:/System/Cryptexes/App/usr/bin:/usr/bin:/bin:/usr/sbin:/sbin:/usr/local/MacGPG2/bin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin', 'CONDA_PREFIX': '/Users/kca/dev-conda/conda/devenv/Darwin/arm64/envs/devenv-3.8-c/envs/scratch3', 'CONDA_SHLVL': 2, 'CONDA_DEFAULT_ENV': 'scratch3', 'CONDA_PROMPT_MODIFIER': '(scratch3) ', 'CONDA_PREFIX_1': '/Users/kca/dev-conda/conda/devenv/Darwin/arm64/envs/devenv-3.8-c', 'CONDA_STACKED_2': 'true', 'CONDA_EXE': '/Users/kca/dev-conda/conda/devenv/Darwin/arm64/envs/devenv-3.8-c/bin/conda', '_CE_M': '', '_CE_CONDA': '', 'CONDA_PYTHON_EXE': '/Users/kca/dev-conda/conda/devenv/Darwin/arm64/envs/devenv-3.8-c/bin/python'},
+#     'deactivate_scripts': (),
+#     'activate_scripts': ('/Users/kca/dev-conda/conda/devenv/Darwin/arm64/envs/devenv-3.8-c/envs/scratch3/etc/conda/activate.d/hello.sh',)
+# }
+
+# PS1='(scratch3) '
+# export PATH='/Users/kca/dev-conda/conda/devenv/Darwin/arm64/envs/devenv-3.8-c/envs/scratch3/bin:/Users/kca/dev-conda/conda/devenv/Darwin/arm64/envs/devenv-3.8-c/bin:/Users/kca/dev-conda/conda/devenv/Darwin/arm64/envs/devenv-3.8-c/condabin:/Users/kca/dev-conda/conda/devenv/Darwin/arm64/envs/devenv-3.8-c/condabin:/Users/kca/miniconda3/condabin:/opt/homebrew/bin:/opt/homebrew/sbin:/usr/local/bin:/System/Cryptexes/App/usr/bin:/usr/bin:/bin:/usr/sbin:/sbin:/usr/local/MacGPG2/bin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin'
+# export CONDA_PREFIX='/Users/kca/dev-conda/conda/devenv/Darwin/arm64/envs/devenv-3.8-c/envs/scratch3'
+# export CONDA_SHLVL='2'
+# export CONDA_DEFAULT_ENV='scratch3'
+# export CONDA_PROMPT_MODIFIER='(scratch3) '
+# export CONDA_PREFIX_1='/Users/kca/dev-conda/conda/devenv/Darwin/arm64/envs/devenv-3.8-c'
+# export CONDA_STACKED_2='true'
+# export CONDA_EXE='/Users/kca/dev-conda/conda/devenv/Darwin/arm64/envs/devenv-3.8-c/bin/conda'
+# export _CE_M=''
+# export _CE_CONDA=''
+# export CONDA_PYTHON_EXE='/Users/kca/dev-conda/conda/devenv/Darwin/arm64/envs/devenv-3.8-c/bin/python'
+# . "/Users/kca/dev-conda/conda/devenv/Darwin/arm64/envs/devenv-3.8-c/envs/scratch3/etc/conda/activate.d/hello.sh"

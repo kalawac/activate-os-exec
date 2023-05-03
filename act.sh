@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 
 # Copyright (C) 2012 Anaconda, Inc
 # SPDX-License-Identifier: BSD-3-Clause
@@ -23,34 +23,49 @@
 
 # CONDA_EXE=$CONDA_PREFIX/bin/conda
 
-__conda_exe() (
-    "$CONDA_EXE" $_CE_M $_CE_CONDA "$@"
-)
+echo in act
+zsh # TODO: get user’s preferred shell info (from environment variable) and restart that shell 
+# echo leaving act
 
-ask_conda="$(PS1="${PS1:-}" __conda_exe shell.posix activate abc)" || \return
+# conda activate abc
+# conda info --envs
+# echo leaving act
 
-# ask_conda="conda activate abc"
-# ask_conda="conda shell.posix activate abc"
+# echo ${PS1}
+# which conda
+# echo leaving act now
 
-\eval "$ask_conda"
+# __conda_exe() (
+#     "$CONDA_EXE" $_CE_M $_CE_CONDA "$@"
+# )
 
-# PS1='(abc) '
-# export PATH='/Users/kca/miniconda3/envs/abc/bin:/Users/kca/miniconda3/condabin:/opt/homebrew/bin:/opt/homebrew/sbin:/usr/local/bin:/System/Cryptexes/App/usr/bin:/usr/bin:/bin:/usr/sbin:/sbin:/usr/local/MacGPG2/bin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin'
-# export CONDA_PREFIX='/Users/kca/miniconda3/envs/abc'
-# export CONDA_SHLVL='1'
-# export CONDA_DEFAULT_ENV='abc'
-# export CONDA_PROMPT_MODIFIER='(abc) '
-# export CONDA_EXE='/Users/kca/miniconda3/bin/conda'
-# export _CE_M=''
-# export _CE_CONDA=''
-# export CONDA_PYTHON_EXE='/Users/kca/miniconda3/bin/python'
+# # echo act is running
+# # echo $@
+# ask_conda="$(PS1="${PS1:-}" __conda_exe shell.posix activate abc)" || \return
 
-# __conda_hashr
+# # ask_conda="conda activate abc"
+# # # ask_conda="conda shell.posix activate abc"
 
-if [ -n "${ZSH_VERSION:+x}" ]; then
-    \rehash
-elif [ -n "${POSH_VERSION:+x}" ]; then
-    :  # pass
-else
-    \hash -r
-fi
+# \eval "$ask_conda"
+
+# # just evaluating the commands does not work
+# # PS1='(abc) '
+# # export PATH='/Users/kca/miniconda3/envs/abc/bin:/Users/kca/miniconda3/condabin:/opt/homebrew/bin:/opt/homebrew/sbin:/usr/local/bin:/System/Cryptexes/App/usr/bin:/usr/bin:/bin:/usr/sbin:/sbin:/usr/local/MacGPG2/bin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin'
+# # export CONDA_PREFIX='/Users/kca/miniconda3/envs/abc'
+# # export CONDA_SHLVL='1'
+# # export CONDA_DEFAULT_ENV='abc'
+# # export CONDA_PROMPT_MODIFIER='(abc) '
+# # export CONDA_EXE='/Users/kca/miniconda3/bin/conda'
+# # export _CE_M=''
+# # export _CE_CONDA=''
+# # export CONDA_PYTHON_EXE='/Users/kca/miniconda3/bin/python'
+
+# # __conda_hashr
+
+# if [ -n "${ZSH_VERSION:+x}" ]; then
+#     \rehash
+# elif [ -n "${POSH_VERSION:+x}" ]; then
+#     :  # pass
+# else
+#     \hash -r
+# fi
