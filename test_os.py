@@ -17,15 +17,14 @@ env = args.env[0] if args.env else None
 if command in  ('activate', 'deactivate'):
     print('activating! or deactivating!')
 
-    # path = '/Users/kca/dev-conda/simple-bash-plugin/OLD/sum_nums'
-    # arg_list = ['.']
+    # path = '/Users/kca/dev-conda/activate-os-exec/act.sh'
 
-    path = '/Users/kca/dev-conda/activate-os-exec/act.sh'
-    # arg_list = ['.']
-    # arg_list = ['hello world']
-    # os.execv(path, arg_list)
+    # arg_list=['. /Users/kca/dev-conda/activate-os-exec/act.sh'] # note: it will still run without this in the arg list
+    
+    path = '/bin/sh'
 
-    arg_list=['echo yo']
+    arg_list=['. /bin/sh']
+    
     env_map = os.environ
 
     # PS1='(abc) '
@@ -54,20 +53,3 @@ if command in  ('activate', 'deactivate'):
 else:
     print('oops! I can\'t work with that command!')
     print(os.environ)
-
-# it needs some sort of file
-# it can run a shell script but it can't run a python file
-
-
-# path = "/bin/sh"
-# print(os.path.abspath(os.path.expanduser(os.path.expandvars(path))))
-# arg_tup = tuple([
-#         "PS1='(kca) '",
-#         # "export PATH='/Users/kca/miniconda3/envs/plugin/bin:/Users/kca/miniconda3/condabin:/opt/homebrew/bin:/opt/homebrew/sbin:/usr/local/bin:/System/Cryptexes/App/usr/bin:/usr/bin:/bin:/usr/sbin:/sbin:/usr/local/MacGPG2/bin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin'",
-#         # "export CONDA_SHLVL='1'",
-#         # "export CONDA_PROMPT_MODIFIER='(plugin) '",
-#         "echo ARDHC complete!"
-# ])
-# os.execv(path, arg_tup)
-
-# is the file actually the actualization logic? and then the arguments are 'eval'?
