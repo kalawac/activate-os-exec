@@ -6,7 +6,7 @@ parser = argparse.ArgumentParser(
     description='Process conda activate, deactivate, and reactivate')
 parser.add_argument('command', metavar='c', type=str, nargs=1,
                     help='the command to be run: activate or deactivate')
-parser.add_argument('--env', metavar='env', type=str, nargs=1,
+parser.add_argument('env', metavar='env', default=None, type=str, nargs='?',
                     help='the name or prefix of the environment to be activated')
 
 args = parser.parse_args()
