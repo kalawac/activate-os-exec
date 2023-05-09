@@ -32,6 +32,7 @@ def ardhc(*args, **kwargs):
     # env_args = tuple(ensure_text_type(s) for s in env_args) 
     parser = argparse.ArgumentParser(
     description="Process conda activate, deactivate, and reactivate")
+    parser.add_argument("ardhc", type=str, nargs=1, help="this package's entry point")
     parser.add_argument("command", metavar="c", type=str, nargs=1,
                     help="the command to be run: 'activate', 'deactivate' or 'reactivate'")
     parser.add_argument("env", metavar="env", default=None, type=str, nargs="?",
@@ -40,7 +41,7 @@ def ardhc(*args, **kwargs):
     args = parser.parse_args()
 
     command = args.command[0]
-    env = args.env[0] if args.env else None
+    env = args.env
 
     context.__init__()
     init_loggers(context)
@@ -50,6 +51,9 @@ def ardhc(*args, **kwargs):
     
     env_args = (command, env) if env else (command,)
     activator = PosixActivator(env_args)
+
+    # call the methods leading up to activate
+    activator._parse_and_set_args(env_args)
 
     # using redefined activate function instead of _Activator.activate
     cmds_dict = activate(activator)
@@ -69,10 +73,10 @@ def ardhc(*args, **kwargs):
     
     
     for key, value in sorted(export_path.items()):
-        env_map[key]=value
+        env_map[str(key)]=str(value)
     
     for key, value in sorted(export_vars.items()):
-        env_map[key]=value
+        env_map[str(key)]=str(value)
 
     deactivate_list = [activator.run_script_tmpl % script for script in deactivate_scripts]
     activate_list = [activator.run_script_tmpl % script for script in activate_scripts]
