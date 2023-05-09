@@ -55,8 +55,21 @@ def ardhc(*args, **kwargs):
     # call the methods leading up to activate
     activator._parse_and_set_args(env_args)
 
-    # using redefined activate function instead of _Activator.activate
-    cmds_dict = activate(activator)
+    # at the moment, if activate is called without an environment, reactivation is being run
+    # through conda's normal process because it would be called during '_parse_and_set_args'
+
+    if command == 'activate' and env:
+        # using redefined activate function instead of _Activator.activate
+        cmds_dict = activate(activator)
+    elif command == 'activate' and not env:
+        cmds_dict = activator.build_reactivate()
+
+    #TODO: look into deactivation process and see what's going on here; it's not working
+    if command == 'deactivate':
+        cmds_dict = activator.build_deactivate()
+
+    if command == 'reactivate':
+        cmds_dict = activator.build_reactivate()
 
     unset_vars = cmds_dict["unset_vars"]
     set_vars = cmds_dict["set_vars"]
