@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "ardhc"
 version = "1.0"
-description = "Plugin for POSIX shells that calls the conda processes used for activate, deactivate, reactivate, hook, and command"
+description = "Plugin for POSIX shells that calls the conda processes used for activate, deactivate, and reactivate"
 requires-python = ">=3.7"
 dependencies = ["conda"]
 

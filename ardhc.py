@@ -1,120 +1,110 @@
 import os
-import sys
+import argparse
 
 
 from conda.common.compat import ensure_text_type
 from conda.base.context import context
 from conda.cli.main import init_loggers
 from conda.activate import PosixActivator
+from conda.exceptions import ArgumentError
 
 import conda.plugins
 
+def activate(activator):
+    if activator.stack:
+        builder_result = activator.build_stack(activator.env_name_or_prefix)
+    else:
+        builder_result = activator.build_activate(activator.env_name_or_prefix)
+    return builder_result
 
-def handle_env(*args, **kwargs):
-    # cleanup argv
-    env_args = sys.argv[2:]  # drop executable/script and sub-command
-    env_args = tuple(ensure_text_type(s) for s in env_args)
+def raise_invalid_command_error(actual_command=None):
+            message = (
+                "'activate', 'deactivate', or 'reactivate'"
+                "command must be given"
+            )
+            if actual_command:
+                message += ". Instead got '%s'." % actual_command
+            raise ArgumentError(message)
+
+def ardhc(*args, **kwargs):
+    # argparse handles cleanup but I need to check if the UTF-8 issue might still persist
+    # no need to check for missing command - handled by argparse
+    # env_args = tuple(ensure_text_type(s) for s in env_args) 
+    parser = argparse.ArgumentParser(
+    description="Process conda activate, deactivate, and reactivate")
+    parser.add_argument("command", metavar="c", type=str, nargs=1,
+                    help="the command to be run: 'activate', 'deactivate' or 'reactivate'")
+    parser.add_argument("env", metavar="env", default=None, type=str, nargs="?",
+                    help="the name or prefix of the environment to be activated")
+
+    args = parser.parse_args()
+
+    command = args.command[0]
+    env = args.env[0] if args.env else None
 
     context.__init__()
     init_loggers(context)
 
-    # specify activator child class directly
+    if command not in  ("activate", "deactivate", "reactivate"):
+        raise_invalid_command_error(actual_command=command)
+    
+    env_args = (command, env) if env else (command,)
     activator = PosixActivator(env_args)
 
-    # run methods leading up to finalize
+    # using redefined activate function instead of _Activator.activate
+    cmds_dict = activate(activator)
 
-    def _yield_commands(cmds_dict):
-        for key, value in sorted(cmds_dict.get("export_path", {}).items()):
-            yield self.export_var_tmpl % (key, value)
+    unset_vars = cmds_dict["unset_vars"]
+    set_vars = cmds_dict["set_vars"]
+    export_path = cmds_dict.get("export_path", {})
+    export_vars = cmds_dict.get("export_vars", {})
+    deactivate_scripts = cmds_dict.get("deactivate_scripts", ())
+    activate_scripts = cmds_dict.get("activate_scripts", ())
 
-        for script in cmds_dict.get("deactivate_scripts", ()):
-            yield self.run_script_tmpl % script
+    print("activating! or deactivating!")
+    env_map = os.environ
 
-        for key in cmds_dict.get("unset_vars", ()):
-            yield self.unset_var_tmpl % key
+    # ignoring setting and unsetting variables for now
+    # TODO: figure out how to set and unset vars :(
+    
+    
+    for key, value in sorted(export_path.items()):
+        env_map[key]=value
+    
+    for key, value in sorted(export_vars.items()):
+        env_map[key]=value
 
-        for key, value in cmds_dict.get("set_vars", {}).items():
-            yield self.set_var_tmpl % (key, value)
+    deactivate_list = [activator.run_script_tmpl % script for script in deactivate_scripts]
+    activate_list = [activator.run_script_tmpl % script for script in activate_scripts]
 
-        for key, value in cmds_dict.get("export_vars", {}).items():
-            yield self.export_var_tmpl % (key, value)
-
-        for script in cmds_dict.get("activate_scripts", ()):
-            yield self.run_script_tmpl % script
+    shell_path = env_map["SHELL"]
+    exec_shell = f". {shell_path}"
 
 
-    path = "/bin/sh" # needs to be the user's location of the shell
-    args = (
-        "PS1='(plugin) '",
-        "export PATH='/Users/kca/miniconda3/envs/plugin/bin:/Users/kca/miniconda3/condabin:/opt/homebrew/bin:/opt/homebrew/sbin:/usr/local/bin:/System/Cryptexes/App/usr/bin:/usr/bin:/bin:/usr/sbin:/sbin:/usr/local/MacGPG2/bin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin'",
-        "export CONDA_SHLVL='1'",
-        "export CONDA_PROMPT_MODIFIER='(plugin) '",
-        "echo ARDHC complete!"
-    )
+    # TODO: can the deactivate scripts be run as a subprocesses? -- they need to run in the initial environment not the new environment
 
-    # confirm that we're using plugin and not usual conda process
-    print("echo ARDHC complete!")
-    # execute process
-    # process does not return -- what does that mean? will the user have to launch the conda executable to get back?
-    op = os.execve(path, env_args, )
+    # creating the list of arguments to be executed by os.execve
+    # minimum argument is to execute the shell
+    # order should be deactivate scripts followed by activation followed by activate scripts
+    arg_list = []
+
+    # deactivate scripts must be run BEFORE the new environment is activated!
+    # the below would take place in the new environment
+    # user would have to type in two commands for us to run os.exec twice
+    # if deactivate_list:
+    #     arg_list.extend(deactivate_list)
+    
+    arg_list.append(exec_shell)
+
+    if activate_list:
+        arg_list.extend(activate_list)
+
+    os.execve(shell_path, arg_list, env_map)
 
 @conda.plugins.hookimpl
 def conda_subcommands():
     yield conda.plugins.CondaSubcommand(
         name="ardhc",
-        summary="Plugin for POSIX shells that calls the conda processes used for activate, deactivate, reactivate, hook, and command",
-        action=handle_env,
+        summary="Plugin for POSIX shells that calls the conda processes used for activate, deactivate, and reactivate",
+        action=ardhc,
     )
-
-# def test_osexec():
-#     a = "echo supercalifragilisticexpialidocious"
-
-# # my thoughts -- execve bc replace the environment with variable arguments and also have a path
-#     op = os.execve()
-
-
-'''
-PS1='(scratch3) '
-export PATH='/Users/kca/dev-conda/conda/devenv/Darwin/arm64/envs/devenv-3.8-c/envs/scratch3/bin:/Users/kca/dev-conda/conda/devenv/Darwin/arm64/envs/devenv-3.8-c/bin:/Users/kca/dev-conda/conda/devenv/Darwin/arm64/envs/devenv-3.8-c/condabin:/Users/kca/miniconda3/condabin:/opt/homebrew/bin:/opt/homebrew/sbin:/usr/local/bin:/System/Cryptexes/App/usr/bin:/usr/bin:/bin:/usr/sbin:/sbin:/usr/local/MacGPG2/bin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin'
-export CONDA_PREFIX='/Users/kca/dev-conda/conda/devenv/Darwin/arm64/envs/devenv-3.8-c/envs/scratch3'
-export CONDA_SHLVL='2'
-export CONDA_DEFAULT_ENV='scratch3'
-export CONDA_PROMPT_MODIFIER='(scratch3) '
-export CONDA_PREFIX_1='/Users/kca/dev-conda/conda/devenv/Darwin/arm64/envs/devenv-3.8-c'
-export CONDA_STACKED_2='true'
-export CONDA_EXE='/Users/kca/dev-conda/conda/devenv/Darwin/arm64/envs/devenv-3.8-c/bin/conda'
-export _CE_M=''
-export _CE_CONDA=''
-export CONDA_PYTHON_EXE='/Users/kca/dev-conda/conda/devenv/Darwin/arm64/envs/devenv-3.8-c/bin/python'
-. "/Users/kca/dev-conda/conda/devenv/Darwin/arm64/envs/devenv-3.8-c/envs/scratch3/etc/conda/activate.d/hello.sh"
-'''
-
-'''
-PS1='(plugin) '
-export PATH='/Users/kca/miniconda3/envs/plugin/bin:/Users/kca/miniconda3/condabin:/opt/homebrew/bin:/opt/homebrew/sbin:/usr/local/bin:/System/Cryptexes/App/usr/bin:/usr/bin:/bin:/usr/sbin:/sbin:/usr/local/MacGPG2/bin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin'
-export CONDA_SHLVL='1'
-export CONDA_PROMPT_MODIFIER='(plugin) '
-echo ARDHC complete!
-'''
-
-# {
-#     'unset_vars': [],
-#     'set_vars': {'PS1': '(scratch3) '},
-#     'export_vars': {'PATH': '/Users/kca/dev-conda/conda/devenv/Darwin/arm64/envs/devenv-3.8-c/envs/scratch3/bin:/Users/kca/dev-conda/conda/devenv/Darwin/arm64/envs/devenv-3.8-c/bin:/Users/kca/dev-conda/conda/devenv/Darwin/arm64/envs/devenv-3.8-c/condabin:/Users/kca/dev-conda/conda/devenv/Darwin/arm64/envs/devenv-3.8-c/condabin:/Users/kca/miniconda3/condabin:/opt/homebrew/bin:/opt/homebrew/sbin:/usr/local/bin:/System/Cryptexes/App/usr/bin:/usr/bin:/bin:/usr/sbin:/sbin:/usr/local/MacGPG2/bin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin', 'CONDA_PREFIX': '/Users/kca/dev-conda/conda/devenv/Darwin/arm64/envs/devenv-3.8-c/envs/scratch3', 'CONDA_SHLVL': 2, 'CONDA_DEFAULT_ENV': 'scratch3', 'CONDA_PROMPT_MODIFIER': '(scratch3) ', 'CONDA_PREFIX_1': '/Users/kca/dev-conda/conda/devenv/Darwin/arm64/envs/devenv-3.8-c', 'CONDA_STACKED_2': 'true', 'CONDA_EXE': '/Users/kca/dev-conda/conda/devenv/Darwin/arm64/envs/devenv-3.8-c/bin/conda', '_CE_M': '', '_CE_CONDA': '', 'CONDA_PYTHON_EXE': '/Users/kca/dev-conda/conda/devenv/Darwin/arm64/envs/devenv-3.8-c/bin/python'},
-#     'deactivate_scripts': (),
-#     'activate_scripts': ('/Users/kca/dev-conda/conda/devenv/Darwin/arm64/envs/devenv-3.8-c/envs/scratch3/etc/conda/activate.d/hello.sh',)
-# }
-
-# PS1='(scratch3) '
-# export PATH='/Users/kca/dev-conda/conda/devenv/Darwin/arm64/envs/devenv-3.8-c/envs/scratch3/bin:/Users/kca/dev-conda/conda/devenv/Darwin/arm64/envs/devenv-3.8-c/bin:/Users/kca/dev-conda/conda/devenv/Darwin/arm64/envs/devenv-3.8-c/condabin:/Users/kca/dev-conda/conda/devenv/Darwin/arm64/envs/devenv-3.8-c/condabin:/Users/kca/miniconda3/condabin:/opt/homebrew/bin:/opt/homebrew/sbin:/usr/local/bin:/System/Cryptexes/App/usr/bin:/usr/bin:/bin:/usr/sbin:/sbin:/usr/local/MacGPG2/bin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin'
-# export CONDA_PREFIX='/Users/kca/dev-conda/conda/devenv/Darwin/arm64/envs/devenv-3.8-c/envs/scratch3'
-# export CONDA_SHLVL='2'
-# export CONDA_DEFAULT_ENV='scratch3'
-# export CONDA_PROMPT_MODIFIER='(scratch3) '
-# export CONDA_PREFIX_1='/Users/kca/dev-conda/conda/devenv/Darwin/arm64/envs/devenv-3.8-c'
-# export CONDA_STACKED_2='true'
-# export CONDA_EXE='/Users/kca/dev-conda/conda/devenv/Darwin/arm64/envs/devenv-3.8-c/bin/conda'
-# export _CE_M=''
-# export _CE_CONDA=''
-# export CONDA_PYTHON_EXE='/Users/kca/dev-conda/conda/devenv/Darwin/arm64/envs/devenv-3.8-c/bin/python'
-# . "/Users/kca/dev-conda/conda/devenv/Darwin/arm64/envs/devenv-3.8-c/envs/scratch3/etc/conda/activate.d/hello.sh"
