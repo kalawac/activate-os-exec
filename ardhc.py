@@ -91,7 +91,10 @@ def ardhc(*args, **kwargs):
     for key, value in sorted(export_vars.items()):
         env_map[str(key)]=str(value)
 
+    # we lose the ability to run the deactivate scripts as part of the same 
     deactivate_list = [activator.run_script_tmpl % script for script in deactivate_scripts]
+    # TODO: run the deactivate scripts as sub-processes (attempt this)
+
     activate_list = [activator.run_script_tmpl % script for script in activate_scripts]
 
     shell_path = env_map["SHELL"]
