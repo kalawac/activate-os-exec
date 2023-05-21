@@ -95,10 +95,10 @@ def ardhc(*args, **kwargs):
     deactivate_list = [activator.run_script_tmpl % script for script in deactivate_scripts]
     # TODO: run the deactivate scripts as sub-processes (attempt this)
 
-    activate_list = [activator.run_script_tmpl % script for script in activate_scripts]
+    # activate_list = ["%s\n" % script for script in activate_scripts]
 
     shell_path = env_map["SHELL"]
-    exec_shell = f". {shell_path}"
+    exec_shell = f"{shell_path} -i"
 
 
     # TODO: can the deactivate scripts be run as a subprocesses? -- they need to run in the initial environment not the new environment
@@ -113,11 +113,24 @@ def ardhc(*args, **kwargs):
     # user would have to type in two commands for us to run os.exec twice
     # if deactivate_list:
     #     arg_list.extend(deactivate_list)
-    
+
+    if activate_scripts:
+        # arg_list.append("sh -c '")
+        # arg_list[-1] = arg_list[-1] + "'"
+        arg_list.append(shell_path)
+        arg_list.append("-c")
+        # activate_list = [f". '%s'\n" % string for string in activate_scripts]
+        # arg_list.extend(activate_list)
+        # activate_string = ". '%s'\n" % activate_scripts[0]
+        # arg_list.append(activate_string)
+        # print(activate_string)
+        # print(activate_list)
+
+    arg_list.append("'echo ${GDAL_DATA}'")
     arg_list.append(exec_shell)
 
-    if activate_list:
-        arg_list.extend(activate_list)
+    # arg_list.append(exec_shell)
+    print(f"{arg_list=}")
 
     os.execve(shell_path, arg_list, env_map)
 
