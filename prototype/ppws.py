@@ -26,7 +26,9 @@ def get_activate_builder(activator):
 
 def activate(activator, cmds_dict):
     '''
-    change environment and run activate scripts from packages installed in new environment
+    change environment. as a new process in in new environment, run deactivate
+    scripts from packages in old environment (to reset env variables) and
+    activate scripts from packages installed in new environment.
     '''
     print("Plugin: In activate...")
 
@@ -38,8 +40,6 @@ def activate(activator, cmds_dict):
     # this method ignores them for now
     export_path = cmds_dict.get("export_path", {}) # seems to be empty for posix shells
     export_vars = cmds_dict.get("export_vars", {})
-    activate_scripts = cmds_dict.get("activate_scripts", ())
-    
 
     print(f"{export_path=}")
     print(f"{export_vars=}")
@@ -52,11 +52,17 @@ def activate(activator, cmds_dict):
 
     print(env_map)
 
-    activate_list = [(activator.run_script_tmpl % script) + activator.command_join for script in activate_scripts]
+    deactivate_scripts = cmds_dict.get("deactivate_scripts", ())
 
-    if activate_list:
+    if deactivate_scripts:
+        deactivate_list = [(activator.run_script_tmpl % script) + activator.command_join for script in deactivate_scripts]
+        arg_list.extend(deactivate_list)
+
+    activate_scripts = cmds_dict.get("activate_scripts", ())
+
+    if activate_scripts:
+        activate_list = [(activator.run_script_tmpl % script) + activator.command_join for script in activate_scripts]
         arg_list.extend(activate_list)
-
 
     os.execve(path, arg_list, env_map)
 
@@ -127,13 +133,10 @@ def posix_plugin_with_shell(*args, **kwargs):
     context.__init__()
     init_loggers(context)
 
-    if command not in  ("activate", "deactivate", "reactivate", "activate_pt2"):
+    if command not in  ("activate", "deactivate", "reactivate"):
         raise_invalid_command_error(actual_command=command)
-    
-    if command == "activate_pt2":
-        env_args = ("activate", env)
-    else:
-        env_args = (command, env) if env else (command,)
+
+    env_args = (command, env) if env else (command,)
     
     activator = PosixActivator(env_args)
 
@@ -148,17 +151,14 @@ def posix_plugin_with_shell(*args, **kwargs):
     if command == 'activate' and env:
         # using redefined activate process instead of _Activator.activate
         cmds_dict = get_activate_builder(activator)
-        deactivate_scripts(activator, cmds_dict, env)
+        activate(activator, cmds_dict)
     elif command == 'activate' and not env:
         # activate without an environment specified is actually reactivate
         cmds_dict = activator.build_reactivate()
 
-    if command == 'activate_pt2':
-        cmds_dict = get_activate_builder(activator)
-        activate(activator, cmds_dict)
-
     #TODO: look into deactivation process and see what's going on here; it's not working
     # can we just exit the sub-shell? If so, how do we do that?
+    # is deactivation in this context actually activation of the previous environment?
     if command == 'deactivate':
         cmds_dict = activator.build_deactivate()
 
