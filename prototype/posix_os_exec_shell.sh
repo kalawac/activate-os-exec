@@ -25,3 +25,5 @@ eval "$@"
 # run an interactive instance of the user's default shell to complete activation
 # new shell will inherit the environment variables of this process
 ${SHELL}
+
+exit 0
