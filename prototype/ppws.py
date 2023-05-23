@@ -121,7 +121,7 @@ def posix_plugin_with_shell(*args, **kwargs):
     # call the methods leading up to the command-specific builds
     activator._parse_and_set_args(env_args)
 
-    # at the moment, if activate is called without an environment, reactivation is being run
+    # at the moment, if activate is called with the same environment, reactivation is being run
     # through conda's normal process because this process would be called during '_parse_and_set_args'
     # this can be dealt with later by editing the '_parse_and_set_args' method
     # or creating a new version for the plugin
