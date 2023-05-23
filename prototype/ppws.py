@@ -34,15 +34,25 @@ def activate(activator, cmds_dict):
 
     path = "/Users/kca/dev-conda/activate-os-exec/prototype/posix_os_exec_shell.sh"
     arg_list = [path]
-    env_map = os.environ
+    env_map = os.environ.copy()
 
     # for PosixActivator process, no unset vars and only var that is set is prompt
     # this method ignores them for now
+    unset_vars = cmds_dict["unset_vars"]
+    set_vars = cmds_dict["set_vars"]
     export_path = cmds_dict.get("export_path", {}) # seems to be empty for posix shells
     export_vars = cmds_dict.get("export_vars", {})
 
     print(f"{export_path=}")
     print(f"{export_vars=}")
+
+    # aside from aesthetics, is there any reason that these were sorted?
+    # can re remove the sorting step?
+    for key in sorted(unset_vars):
+        env_map.pop(str(key), None)
+    
+    for key, value in sorted(set_vars.items()):
+        env_map[str(key)]=str(value)
 
     for key, value in sorted(export_path.items()):
         env_map[str(key)]=str(value)
@@ -65,38 +75,6 @@ def activate(activator, cmds_dict):
         arg_list.extend(activate_list)
 
     os.execve(path, arg_list, env_map)
-
-def deactivate_scripts(activator, cmds_dict, env):
-    '''
-    run deactivate scripts from packages installed into the existing environment prior to activating new environment
-    '''
-    print("Plugin: In deactivate_scripts...")
-
-    path = "/Users/kca/dev-conda/activate-os-exec/prototype/posix_os_exec_shell.sh"
-    arg_list = [path]
-    activate_command = f"conda ppws activate_pt2 {env}"
-
-    # for some reason, putting . in front of the local scripts causes an error: "No such file or directory"
-    # they run fine if they're just called by path
-    # the real package scripts seem to run with the ., though
-
-    deactivate_scripts = cmds_dict.get("deactivate_scripts", ())
-    deactivate_list = [(activator.run_script_tmpl % script) + activator.command_join for script in deactivate_scripts]
-
-    # deactivate_scripts = ("/Users/kca/dev-conda/activate-os-exec/sum.sh 3 6", "~/learning/bash-mastery/sum_nums")
-    # deactivate_list = [script + activator.command_join for script in deactivate_scripts]
-
-    if deactivate_list:
-        arg_list.extend(deactivate_list)
-
-    arg_list.append(activate_command)
-
-    # confirming that commands calling conda directly work
-    # arg_list.append("conda -h\n")
-    # arg_list.append("conda info --envs")
-    # arg_list.append(f"conda shell.posix activate ${env}")
-
-    os.execv(path, arg_list)
 
 
 def raise_invalid_command_error(actual_command=None):
@@ -151,21 +129,15 @@ def posix_plugin_with_shell(*args, **kwargs):
     if command == 'activate' and env:
         # using redefined activate process instead of _Activator.activate
         cmds_dict = get_activate_builder(activator)
-        activate(activator, cmds_dict)
-    elif command == 'activate' and not env:
-        # activate without an environment specified is actually reactivate
-        cmds_dict = activator.build_reactivate()
 
-    #TODO: look into deactivation process and see what's going on here; it's not working
-    # can we just exit the sub-shell? If so, how do we do that?
-    # is deactivation in this context actually activation of the previous environment?
+
     if command == 'deactivate':
         cmds_dict = activator.build_deactivate()
 
     if command == 'reactivate':
         cmds_dict = activator.build_reactivate()
 
-
+    return activate(activator, cmds_dict)
 
 
 @conda.plugins.hookimpl
