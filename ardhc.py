@@ -80,11 +80,13 @@ def ardhc(*args, **kwargs):
 
     print("activating! or deactivating!")
     env_map = os.environ
+    
+    for key in sorted(unset_vars):
+        env_map.pop(str(key), None)
+    
+    for key, value in sorted(set_vars.items()):
+        env_map[str(key)]=str(value)
 
-    # ignoring setting and unsetting variables for now
-    # TODO: figure out how to set and unset vars :(
-    
-    
     for key, value in sorted(export_path.items()):
         env_map[str(key)]=str(value)
     
@@ -98,7 +100,7 @@ def ardhc(*args, **kwargs):
     # activate_list = ["%s\n" % script for script in activate_scripts]
 
     shell_path = env_map["SHELL"]
-    exec_shell = f"{shell_path} -i"
+    exec_shell = f"{shell_path}"
 
 
     # TODO: can the deactivate scripts be run as a subprocesses? -- they need to run in the initial environment not the new environment
@@ -114,23 +116,23 @@ def ardhc(*args, **kwargs):
     # if deactivate_list:
     #     arg_list.extend(deactivate_list)
 
-    if activate_scripts:
-        # arg_list.append("sh -c '")
-        # arg_list[-1] = arg_list[-1] + "'"
-        arg_list.append(shell_path)
-        arg_list.append("-c")
-        # activate_list = [f". '%s'\n" % string for string in activate_scripts]
-        # arg_list.extend(activate_list)
-        # activate_string = ". '%s'\n" % activate_scripts[0]
-        # arg_list.append(activate_string)
-        # print(activate_string)
-        # print(activate_list)
+    # if activate_scripts:
+    #     # arg_list.append("sh -c '")
+    #     # arg_list[-1] = arg_list[-1] + "'"
+    #     arg_list.append(shell_path)
+    #     arg_list.append("-c")
+    #     # activate_list = [f". '%s'\n" % string for string in activate_scripts]
+    #     # arg_list.extend(activate_list)
+    #     # activate_string = ". '%s'\n" % activate_scripts[0]
+    #     # arg_list.append(activate_string)
+    #     # print(activate_string)
+    #     # print(activate_list)
 
-    arg_list.append("'echo ${GDAL_DATA}'")
+    # arg_list.append("'echo ${GDAL_DATA}'")
     arg_list.append(exec_shell)
 
-    # arg_list.append(exec_shell)
-    print(f"{arg_list=}")
+    # # arg_list.append(exec_shell)
+    # print(f"{arg_list=}")
 
     os.execve(shell_path, arg_list, env_map)
 
