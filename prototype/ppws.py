@@ -43,8 +43,8 @@ def activate(activator, cmds_dict):
     export_path = cmds_dict.get("export_path", {}) # seems to be empty for posix shells
     export_vars = cmds_dict.get("export_vars", {})
 
-    print(f"{export_path=}")
-    print(f"{export_vars=}")
+    # print(f"{export_path=}")
+    # print(f"{export_vars=}")
 
     # aside from aesthetics, is there any reason that these were sorted?
     # can re remove the sorting step?
@@ -60,7 +60,7 @@ def activate(activator, cmds_dict):
     for key, value in sorted(export_vars.items()):
         env_map[str(key)]=str(value)
 
-    print(env_map)
+    # print(env_map)
 
     deactivate_scripts = cmds_dict.get("deactivate_scripts", ())
 
@@ -106,13 +106,21 @@ def posix_plugin_with_shell(*args, **kwargs):
 
     command = args.command[0]
     env = args.env
+    print(f"{command=}")
     print(f"{env=}")
 
     context.__init__()
     init_loggers(context)
 
-    if command not in  ("activate", "deactivate", "reactivate"):
+    if command not in  ("activate", "deactivate", "reactivate", "setprompt"):
         raise_invalid_command_error(actual_command=command)
+
+    if command == 'setprompt':
+        path = "/Users/kca/dev-conda/activate-os-exec/ps1.sh"
+        arg = [". /Users/kca/dev-conda/activate-os-exec/ps1.sh"]
+        env_map = os.environ.copy()
+        
+        return os.execve(path, arg, env_map)
 
     env_args = (command, env) if env else (command,)
     
@@ -130,12 +138,12 @@ def posix_plugin_with_shell(*args, **kwargs):
         # using redefined activate process instead of _Activator.activate
         cmds_dict = get_activate_builder(activator)
 
-
     if command == 'deactivate':
         cmds_dict = activator.build_deactivate()
 
     if command == 'reactivate':
         cmds_dict = activator.build_reactivate()
+
 
     return activate(activator, cmds_dict)
 

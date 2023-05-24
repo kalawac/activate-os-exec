@@ -22,6 +22,16 @@ done
 # Evaluate all the arguments at once
 eval "$@"
 
+echo PS1=${PS1}
+
+PS1="(habanero) "
+export PS1
+# The hash command must be called to get it to forget past
+# commands. Without forgetting past commands the $PATH changes
+# we made may not be respected
+hash -r 2>/dev/null
+echo PS1=${PS1}
+
 # run an interactive instance of the user's default shell to complete activation
 # new shell will inherit the environment variables of this process
 ${SHELL}
